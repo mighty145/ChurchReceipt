@@ -9,19 +9,7 @@ MembershipAmount: None
 BirthdayThankOffering: None
 WeddingAnniversaryThankOffering: None
 HomeMissionPledges: None
-MissionAnd    # Reference number (adapted based on payment method)
-    y_pos += 20
-    payment_method = invoice_data.get('PaymentMethod', 'CASH').upper()
-    if payment_method == 'CHEQUE':
-        label_text = "Cheque No."
-    elif payment_method == 'ONLINE':
-        label_text = "Transaction Ref."
-    else:  # CASH
-        label_text = "Reference No."
-    
-    draw.text((50, y_pos), label_text, fill=black_color, font=body_font)
-    cheque_no = invoice_data.get('OnlineChequeNo', '')
-    draw.text((200, y_pos), str(cheque_no), fill=black_color, font=body_font)elismFund: None
+MissionAndEvangelismFund: None
 StStephensSocialAidFund: None
 SpecialThanksAmount: None
 CharityFundAmount: None
@@ -39,7 +27,9 @@ import os
 
 def get_next_receipt_number():
     """Get the next receipt number from file, increment and save"""
-    receipt_file = "receipt_counter.txt"
+    # Use absolute path to ensure we always use the receipt_counter.txt in Invoice folder
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    receipt_file = os.path.join(script_dir, "receipt_counter.txt")
     try:
         if os.path.exists(receipt_file):
             with open(receipt_file, 'r') as f:
@@ -59,7 +49,9 @@ def get_next_receipt_number():
 
 def reset_receipt_counter():
     """Reset receipt counter to 1"""
-    receipt_file = "receipt_counter.txt"
+    # Use absolute path to ensure we always use the receipt_counter.txt in Invoice folder
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    receipt_file = os.path.join(script_dir, "receipt_counter.txt")
     with open(receipt_file, 'w') as f:
         f.write("0")
     print("Receipt counter reset to 1")
@@ -414,7 +406,11 @@ def generate_receipt(invoice_data, output_formats=["jpg", "pdf"]):
     
     draw.text((50, y_pos), number_label, fill=black_color, font=body_font)
     cheque_no = invoice_data.get('OnlineChequeNo', '')
-    draw.text((200, y_pos), str(cheque_no), fill=black_color, font=body_font)
+    # Calculate proper position for the value based on label width
+    label_bbox = draw.textbbox((0, 0), number_label, font=body_font)
+    label_width = label_bbox[2] - label_bbox[0]
+    value_x = 50 + label_width + 10  # Label start + label width + small gap
+    draw.text((value_x, y_pos), str(cheque_no), fill=black_color, font=body_font)
     
     # Signature
     draw.text((320, y_pos), "Treasurer / Secretary", fill=black_color, font=body_font)
