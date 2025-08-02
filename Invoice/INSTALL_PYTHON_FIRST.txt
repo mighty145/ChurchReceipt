@@ -1,0 +1,41 @@
+🚨 IMMEDIATE ACTION REQUIRED 🚨
+
+PYTHON IS NOT INSTALLED
+========================
+
+To use the Church Invoice Analyzer, you need Python installed:
+
+📥 STEP 1: INSTALL PYTHON
+-------------------------
+1. Go to: https://www.python.org/downloads/
+2. Download the latest Python 3.x version
+3. ⚠️  IMPORTANT: Check "Add Python to PATH" during installation
+4. Choose "Install for all users" if you have admin rights
+
+🔄 STEP 2: RESTART COMMAND PROMPT
+--------------------------------
+After installing Python:
+1. Close this command prompt window
+2. Open a new command prompt
+3. Navigate back to this folder:
+   cd "C:\Users\might\Projects\ChruchProject\Invoice"
+4. Run setup again: .\setup.bat
+
+✅ STEP 3: VERIFY INSTALLATION
+-----------------------------
+Test Python installation:
+python --version
+pip --version
+
+🚀 ALTERNATIVE: QUICK START
+---------------------------
+If you want to test without full setup:
+1. Install Python (steps above)
+2. Run: python check_environment.py
+3. This will guide you through the setup
+
+📞 NEED HELP?
+-------------
+See TROUBLESHOOTING.md for detailed solutions to common problems.
+
+Windows Users: Make sure to restart your command prompt after installing Python!

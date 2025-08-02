@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt Generated - Church Invoice Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .success-icon {
+            color: #4caf50;
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+        
+        .success-message {
+            color: #4caf50;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        .file-list {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: left;
+        }
+        
+        .file-list h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .file-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .file-icon {
+            margin-right: 10px;
+            font-size: 1.5em;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.3);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+            box-shadow: 0 10px 20px rgba(108,117,125,0.3);
+        }
+        
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+        
+        .receipt-summary {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: left;
+        }
+        
+        .receipt-summary h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .summary-item {
+            background: white;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        
+        .summary-label {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        
+        .summary-value {
+            color: #333;
+        }
+        
+        .actions {
+            margin-top: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .file-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .file-info {
+                margin-bottom: 10px;
+            }
+            
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">🎉</div>
+        <h1>Receipt Generated Successfully!</h1>
+        <p class="success-message">Your receipt has been generated and saved in multiple formats.</p>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="success-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="file-list">
+            <h3>Generated Files</h3>
+            {% for file in saved_files %}
+                <div class="file-item">
+                    <div class="file-info">
+                        <span class="file-icon">
+                            {% if file.endswith('.pdf') %}📄{% else %}🖼️{% endif %}
+                        </span>
+                        <span>{{ file.split('\\')[-1] or file.split('/')[-1] }}</span>
+                    </div>
+                    <a href="{{ url_for('download_file', filename=file.split('\\')[-1] or file.split('/')[-1]) }}" 
+                       class="btn btn-small" download>Download</a>
+                    {% if file.endswith('.pdf') and receipt_data.MobileNumber %}
+                        <button class="btn btn-small" style="background: #25D366; color: white; margin-left: 10px;" 
+                                onclick="shareViaWhatsApp('{{ receipt_data.MobileNumber }}', '{{ file.split('\\')[-1] or file.split('/')[-1] }}')">
+                            💬 WhatsApp
+                        </button>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            {% if receipt_data.MobileNumber %}
+                <div style="margin-top: 15px; padding: 15px; background: #e8f5e8; border-radius: 8px; text-align: left;">
+                    <h4 style="color: #2e7d32; margin-bottom: 10px;">📱 WhatsApp Sharing</h4>
+                    <p style="color: #555; font-size: 14px;">
+                        Click the WhatsApp button next to the PDF file to share it via WhatsApp to: 
+                        <strong>{{ receipt_data.MobileNumber }}</strong>
+                    </p>
+                </div>
+            {% else %}
+                <div style="margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 8px; text-align: left;">
+                    <h4 style="color: #856404; margin-bottom: 10px;">💡 Tip</h4>
+                    <p style="color: #856404; font-size: 14px;">
+                        Add a mobile number when extracting data to enable WhatsApp sharing for future receipts.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="receipt-summary">
+            <h3>Receipt Summary</h3>
+            <div class="summary-grid">
+                {% if receipt_data.Name %}
+                    <div class="summary-item">
+                        <div class="summary-label">Name:</div>
+                        <div class="summary-value">{{ receipt_data.Name }}</div>
+                    </div>
+                {% endif %}
+                
+                {% if receipt_data.InvoiceDate %}
+                    <div class="summary-item">
+                        <div class="summary-label">Date:</div>
+                        <div class="summary-value">{{ receipt_data.InvoiceDate }}</div>
+                    </div>
+                {% endif %}
+                
+                {% if receipt_data.TitheAmount and receipt_data.TitheAmount > 0 %}
+                    <div class="summary-item">
+                        <div class="summary-label">Tithe Amount:</div>
+                        <div class="summary-value">₹{{ receipt_data.TitheAmount }}</div>
+                    </div>
+                {% endif %}
+                
+                {% if receipt_data.MembershipAmount and receipt_data.MembershipAmount > 0 %}
+                    <div class="summary-item">
+                        <div class="summary-label">Membership Amount:</div>
+                        <div class="summary-value">₹{{ receipt_data.MembershipAmount }}</div>
+                    </div>
+                {% endif %}
+                
+                {% if receipt_data.BirthdayThankOffering and receipt_data.BirthdayThankOffering > 0 %}
+                    <div class="summary-item">
+                        <div class="summary-label">Birthday Offering:</div>
+                        <div class="summary-value">₹{{ receipt_data.BirthdayThankOffering }}</div>
+                    </div>
+                {% endif %}
+                
+                {% if receipt_data.WeddingAnniversaryThankOffering and receipt_data.WeddingAnniversaryThankOffering > 0 %}
+                    <div class="summary-item">
+                        <div class="summary-label">Anniversary Offering:</div>
+                        <div class="summary-value">₹{{ receipt_data.WeddingAnniversaryThankOffering }}</div>
+                    </div>
+                {% endif %}
+                
+                {% if receipt_data.SpecialThanksAmount and receipt_data.SpecialThanksAmount > 0 %}
+                    <div class="summary-item">
+                        <div class="summary-label">Special Thanks:</div>
+                        <div class="summary-value">₹{{ receipt_data.SpecialThanksAmount }}</div>
+                    </div>
+                {% endif %}
+                
+                {% if receipt_data.MissionAndEvangelismFund and receipt_data.MissionAndEvangelismFund > 0 %}
+                    <div class="summary-item">
+                        <div class="summary-label">Mission & Evangelism:</div>
+                        <div class="summary-value">₹{{ receipt_data.MissionAndEvangelismFund }}</div>
+                    </div>
+                {% endif %}
+                
+                {% if receipt_data.CharityFundAmount and receipt_data.CharityFundAmount > 0 %}
+                    <div class="summary-item">
+                        <div class="summary-label">Charity Fund:</div>
+                        <div class="summary-value">₹{{ receipt_data.CharityFundAmount }}</div>
+                    </div>
+                {% endif %}
+                
+                {% if receipt_data.StStephensSocialAidFund and receipt_data.StStephensSocialAidFund > 0 %}
+                    <div class="summary-item">
+                        <div class="summary-label">Social Aid Fund:</div>
+                        <div class="summary-value">₹{{ receipt_data.StStephensSocialAidFund }}</div>
+                    </div>
+                {% endif %}
+                
+                {% if receipt_data.HarvestAuctionAmount and receipt_data.HarvestAuctionAmount > 0 %}
+                    <div class="summary-item">
+                        <div class="summary-label">Harvest Auction:</div>
+                        <div class="summary-value">₹{{ receipt_data.HarvestAuctionAmount }}</div>
+                    </div>
+                {% endif %}
+                
+                {% if receipt_data.DonationAmount and receipt_data.DonationAmount > 0 %}
+                    <div class="summary-item">
+                        <div class="summary-label">Donation Amount:</div>
+                        <div class="summary-value">₹{{ receipt_data.DonationAmount }}</div>
+                    </div>
+                {% endif %}
+                
+                {% if receipt_data.OnlineChequeNo %}
+                    <div class="summary-item">
+                        <div class="summary-label">Cheque Number:</div>
+                        <div class="summary-value">{{ receipt_data.OnlineChequeNo }}</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="actions">
+            <a href="{{ url_for('index') }}" class="btn">Process Another Document</a>
+            <a href="#" class="btn btn-secondary" onclick="window.print()">Print This Page</a>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-focus for mobile accessibility
+        window.addEventListener('load', function() {
+            if (window.innerWidth <= 768) {
+                document.querySelector('.container').scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+        
+        function shareViaWhatsApp(mobileNumber, filename) {
+            // Format mobile number
+            const cleanNumber = mobileNumber.replace(/\D/g, '');
+            let formattedNumber = cleanNumber;
+            
+            if (!formattedNumber.startsWith('1') && formattedNumber.length === 10) {
+                formattedNumber = '1' + formattedNumber;
+            }
+            
+            // Create download URL for the PDF
+            const pdfUrl = `${window.location.origin}/download/${filename}`;
+            
+            // Create message text
+            const name = '{{ receipt_data.Name or "Member" }}';
+            const date = '{{ receipt_data.InvoiceDate or "" }}';
+            
+            const receiptMessage = encodeURIComponent(
+                `📄 *Church Payment Receipt*\n\n` +
+                `Dear *${name}*,\n\n` +
+                `Thank you for your generous contribution to our church. ` +
+                `Your official payment receipt is ready for download.\n\n` +
+                `🏛️ *The Methodist English Church*\n` +
+                `📅 *Date:* ${date}\n\n` +
+                `📎 *Click here to download your receipt:*\n${pdfUrl}\n\n` +
+                `💡 *Instructions:*\n` +
+                `• Tap the link above to download\n` +
+                `• Save the PDF to your device\n` +
+                `• Keep it for your records\n\n` +
+                `God bless you! 🙏\n\n` +
+                `_This is an automated message from The Methodist English Church receipt system._`
+            );
+            
+            // Open WhatsApp
+            const whatsappUrl = `https://wa.me/${formattedNumber}?text=${receiptMessage}`;
+            window.open(whatsappUrl, '_blank');
+            
+            // Show success message
+            alert('WhatsApp opened! The message includes a download link for the PDF receipt.');
+        }
+    </script>
+</body>
+</html>

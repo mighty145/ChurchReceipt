@@ -1,0 +1,29 @@
+{
+  "name": "church-invoice-analyzer",
+  "location": "East US",
+  "sku": "B1",
+  "pythonVersion": "3.9",
+  "appSettings": [
+    {
+      "name": "FLASK_ENV",
+      "value": "production"
+    },
+    {
+      "name": "SECRET_KEY",
+      "value": "your-production-secret-key-here"
+    },
+    {
+      "name": "AZURE_ENDPOINT",
+      "value": "https://your-resource-name.cognitiveservices.azure.com/"
+    },
+    {
+      "name": "AZURE_API_KEY",
+      "value": "your-azure-api-key-here"
+    },
+    {
+      "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+      "value": "true"
+    }
+  ],
+  "startup": "gunicorn --bind 0.0.0.0:8000 --timeout 600 wsgi:app"
+}

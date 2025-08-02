@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Church Invoice">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" sizes="192x192" href="/static/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/static/icon-512.png">
+    <title>Mobile Invoice Upload</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            /* Prevent scroll bouncing on iOS */
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            /* Prevent callouts and selection on mobile */
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Allow text selection for input fields */
+        input, textarea {
+            -webkit-user-select: text;
+            -khtml-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px 20px;
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+        
+        .upload-section {
+            margin: 30px 0;
+        }
+        
+        .camera-btn, .gallery-btn, .manual-btn, .upload-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 15px 0;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+            /* Better touch targets for mobile */
+            min-height: 48px;
+            /* Prevent iOS button styling */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            /* Better touch feedback */
+            -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+        }
+        
+        .camera-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+        
+        .gallery-btn {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+        }
+        
+        .manual-btn {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+        }
+        
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .camera-btn:hover, .gallery-btn:hover, .manual-btn:hover, .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .selected-file {
+            background: #e8f5e8;
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #2e7d32;
+            display: none;
+        }
+        
+        .preview-container {
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .result-section {
+            display: none;
+            text-align: left;
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .result-title {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .btn-outline {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 12px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* WhatsApp button styling */
+        .btn-whatsapp {
+            background: #25D366 !important;
+            border-color: #25D366 !important;
+            color: white !important;
+        }
+        
+        .btn-whatsapp:hover:not(:disabled) {
+            background: #128C7E !important;
+            border-color: #128C7E !important;
+            color: white !important;
+        }
+        
+        .field-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .field-label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .field-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #333;
+            background-color: #fff;
+            transition: border-color 0.3s ease;
+            /* Prevent iOS zoom on input focus */
+            font-size: 16px !important;
+            /* Prevent iOS styling */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .field-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .field-input.extracted-value {
+            background-color: #e8f5e8;
+            border-color: #4CAF50;
+        }
+        
+        .field-value {
+            color: #333;
+        }
+        
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                margin: 10px;
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 1.3em;
+            }
+            
+            /* Better touch targets on small screens */
+            .camera-btn, .gallery-btn, .manual-btn, .upload-btn {
+                min-height: 52px;
+                font-size: 1.2em;
+            }
+        }
+        
+        /* iOS specific fixes */
+        @supports (-webkit-overflow-scrolling: touch) {
+            body {
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Fix iOS input zoom */
+            input[type="text"], 
+            input[type="email"], 
+            input[type="tel"], 
+            input[type="number"], 
+            input[type="date"], 
+            textarea {
+                font-size: 16px !important;
+            }
+        }
+        
+        /* Android specific fixes */
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+            input[type="file"] {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">📱</div>
+        <h1>Church Invoice Analyzer</h1>
+        <p class="subtitle">Capture or upload your payment form to extract data automatically</p>
+        
+        <div class="upload-section">
+            <!-- Camera capture for mobile -->
+            <button class="camera-btn" onclick="captureFromCamera()">
+                📷 Take Photo
+            </button>
+            
+            <!-- Gallery selection -->
+            <button class="gallery-btn" onclick="selectFromGallery()">
+                🖼️ Choose from Gallery
+            </button>
+            
+            <!-- Manual entry -->
+            <button class="manual-btn" onclick="goToManualEntry()">
+                ✏️ Manual Entry
+            </button>
+            
+            <!-- Hidden file inputs -->
+            <input type="file" id="cameraInput" class="file-input" accept="image/*" capture="environment">
+            <input type="file" id="galleryInput" class="file-input" accept="image/*,application/pdf">
+        </div>
+        
+        <div class="selected-file" id="selectedFile">
+            <strong>Selected: </strong><span id="fileName"></span>
+        </div>
+        
+        <div class="preview-container" id="previewContainer">
+            <img id="previewImage" class="preview-image" alt="Selected image preview">
+        </div>
+        
+        <button class="upload-btn" id="uploadBtn" onclick="uploadFile()" style="display: none;">
+            🚀 Analyze Document
+        </button>
+        
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+        
+        <div class="result-section" id="resultSection">
+            <div class="result-title">📊 Extracted Data</div>
+            <div id="extractedFields"></div>
+            <div id="receiptButtonContainer" style="display: none; margin-top: 20px;">
+                <button class="btn btn-primary" id="generateReceiptBtn" onclick="generateReceipt()">
+                    📄 Generate Receipt
+                </button>
+            </div>
+            <div id="receiptDownloadContainer" style="display: none; margin-top: 20px;">
+                <div class="success-message">Receipt generated successfully!</div>
+                <div id="downloadLinks"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        
+        function captureFromCamera() {
+            document.getElementById('cameraInput').click();
+        }
+        
+        function selectFromGallery() {
+            document.getElementById('galleryInput').click();
+        }
+        
+        function goToManualEntry() {
+            // Navigate to manual entry page
+            window.location.href = '/manual-entry';
+        }
+        
+        // Handle camera input
+        document.getElementById('cameraInput').addEventListener('change', function(e) {
+            handleFileSelection(e.target.files[0], 'Camera');
+        });
+        
+        // Handle gallery input
+        document.getElementById('galleryInput').addEventListener('change', function(e) {
+            handleFileSelection(e.target.files[0], 'Gallery');
+        });
+        
+        function handleFileSelection(file, source) {
+            if (!file) return;
+            
+            selectedFile = file;
+            
+            // Show selected file info
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('selectedFile').style.display = 'block';
+            
+            // Show preview for images
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImage').src = e.target.result;
+                    document.getElementById('previewContainer').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            // Show upload button
+            document.getElementById('uploadBtn').style.display = 'block';
+            
+            // Hide any previous messages
+            hideMessages();
+        }
+        
+        function uploadFile() {
+            if (!selectedFile) {
+                showError('Please select a file first');
+                return;
+            }
+            
+            hideMessages();
+            
+            // Show progress
+            document.getElementById('progressBar').style.display = 'block';
+            document.getElementById('uploadBtn').style.display = 'none';
+            
+            // Hide previous results
+            document.getElementById('resultSection').style.display = 'none';
+            document.getElementById('receiptButtonContainer').style.display = 'none';
+            document.getElementById('receiptDownloadContainer').style.display = 'none';
+            
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 10;
+                document.getElementById('progressFill').style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    // In a real implementation, this would make an API call
+                    simulateAnalysis();
+                }
+            }, 200);
+        }
+        
+        function simulateAnalysis() {
+            // Make actual API call to analyze the document
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            
+            fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide progress
+                document.getElementById('progressBar').style.display = 'none';
+                
+                if (data.success) {
+                    // Store the filename for receipt generation
+                    window.currentFilename = data.filename;
+                    
+                    // Show actual extracted data
+                    showResults(data.extracted_data);
+                    showSuccess('Document analyzed successfully! Review the extracted data above.');
+                    
+                    // Show generate receipt button
+                    showGenerateReceiptButton(data.extracted_data);
+                } else {
+                    showError(data.error || 'Error analyzing document');
+                }
+                
+                // Show upload button again for next file
+                document.getElementById('uploadBtn').style.display = 'block';
+                document.getElementById('uploadBtn').textContent = '📄 Analyze Another Document';
+                
+            })
+            .catch(error => {
+                // Hide progress
+                document.getElementById('progressBar').style.display = 'none';
+                
+                showError('Error analyzing document: ' + error.message);
+                
+                // Show upload button again
+                document.getElementById('uploadBtn').style.display = 'block';
+                document.getElementById('uploadBtn').textContent = '📄 Analyze Another Document';
+            });
+        }
+        
+        function showResults(data) {
+            const fieldsContainer = document.getElementById('extractedFields');
+            fieldsContainer.innerHTML = '';
+            
+            // Define all possible fields with their display names and input types
+            const allFields = {
+                'InvoiceDate': { label: 'Invoice Date', type: 'date' },
+                'Name': { label: 'Name', type: 'text' },
+                'Address': { label: 'Address', type: 'text' },
+                'MobileNumber': { label: 'Mobile Number', type: 'tel' },
+                'TitheMonth': { label: 'Tithe Month', type: 'text' },
+                'TitheAmount': { label: 'Tithe Amount', type: 'number' },
+                'MembershipMonth': { label: 'Membership Month', type: 'text' },
+                'MembershipAmount': { label: 'Membership Amount', type: 'number' },
+                'BirthdayThankOffering': { label: 'Birthday Thank Offering', type: 'number' },
+                'WeddingAnniversaryThankOffering': { label: 'Wedding Anniversary Thank Offering', type: 'number' },
+                'HomeMissionPledges': { label: 'Home Mission Pledges', type: 'number' },
+                'MissionAndEvangelismFund': { label: 'Mission & Evangelism Fund', type: 'number' },
+                'StStephensSocialAidFund': { label: 'St Stephens Social Aid Fund', type: 'number' },
+                'DonationFor': { label: 'Donation For', type: 'text' },
+                'DonationAmount': { label: 'Donation Amount', type: 'number' },
+                'SpecialThanksAmount': { label: 'Special Thanks Amount', type: 'number' },
+                'CharityFundAmount': { label: 'Charity Fund Amount', type: 'number' },
+                'HarvestAuctionComment': { label: 'Harvest Auction Comment', type: 'text' },
+                'HarvestAuctionAmount': { label: 'Harvest Auction Amount', type: 'number' },
+                'OnlineChequeNo': { label: 'Online Cheque Number', type: 'text' }
+            };
+            
+            // Store extracted data globally for receipt generation
+            window.extractedData = data;
+            
+            // Show all fields as editable inputs
+            for (const [key, field] of Object.entries(allFields)) {
+                const value = data[key] || '';
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'field-item';
+                
+                // Create editable input field
+                const inputType = field.type;
+                const extractedClass = value ? 'extracted-value' : '';
+                const placeholder = field.type === 'number' ? '0.00' : 
+                                  field.type === 'tel' ? '+1234567890' : 
+                                  `Enter ${field.label.toLowerCase()}`;
+                
+                const onChangeEvent = key === 'MobileNumber' ? 
+                    `onchange="updateExtractedData('${key}', this.value); updateWhatsAppOption()"` :
+                    `onchange="updateExtractedData('${key}', this.value)"`;
+                
+                const stepAttribute = field.type === 'number' ? 'step="0.01" min="0"' : '';
+                
+                fieldDiv.innerHTML = `
+                    <label class="field-label" for="${key}">${field.label}</label>
+                    <input 
+                        type="${inputType}" 
+                        id="${key}" 
+                        name="${key}" 
+                        class="field-input ${extractedClass}" 
+                        value="${value}" 
+                        placeholder="${placeholder}"
+                        ${stepAttribute}
+                        ${onChangeEvent}
+                    >
+                `;
+                fieldsContainer.appendChild(fieldDiv);
+            }
+            
+            document.getElementById('resultSection').style.display = 'block';
+        }
+        
+        function showGenerateReceiptButton(data) {
+            // Show the generate receipt button
+            document.getElementById('receiptButtonContainer').style.display = 'block';
+        }
+        
+        function updateExtractedData(fieldName, value) {
+            // Update the global extracted data when user edits fields
+            if (!window.extractedData) {
+                window.extractedData = {};
+            }
+            window.extractedData[fieldName] = value;
+        }
+        
+        function updateWhatsAppOption() {
+            // Update WhatsApp sharing option when mobile number changes
+            if (document.getElementById('receiptDownloadContainer').style.display === 'block') {
+                showDownloadLinks();
+            }
+        }
+        
+        function shareViaWhatsApp(mobileNumber, filename) {
+            // Format mobile number (remove any non-digits and ensure it starts with country code)
+            const cleanNumber = mobileNumber.replace(/\D/g, '');
+            let formattedNumber = cleanNumber;
+            
+            // If number doesn't start with country code, assume it's US (+1)
+            if (!formattedNumber.startsWith('1') && formattedNumber.length === 10) {
+                formattedNumber = '1' + formattedNumber;
+            }
+            
+            // Create download URL for the PDF
+            const pdfUrl = `${window.location.origin}/download/${filename}`;
+            
+            // Create message text with properly formatted clickable link
+            const receiptMessage = encodeURIComponent(
+                `📄 *Church Payment Receipt*\n\n` +
+                `Dear *${document.getElementById('Name')?.value || 'Member'}*,\n\n` +
+                `Thank you for your generous contribution to our church. ` +
+                `Your official payment receipt is ready for download.\n\n` +
+                `🏛️ *The Methodist English Church*\n` +
+                `📅 *Date:* ${document.getElementById('InvoiceDate')?.value || new Date().toISOString().split('T')[0]}\n\n` +
+                `📎 *Click here to download your receipt:*\n${pdfUrl}\n\n` +
+                `💡 *Instructions:*\n` +
+                `• Tap the link above to download\n` +
+                `• Save the PDF to your device\n` +
+                `• Keep it for your records\n\n` +
+                `God bless you! 🙏\n\n` +
+                `_This is an automated message from The Methodist English Church receipt system._`
+            );
+            
+            // For mobile devices, use WhatsApp Web URL with message
+            const whatsappUrl = `https://wa.me/${formattedNumber}?text=${receiptMessage}`;
+            
+            // Show loading message
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '📤 Opening WhatsApp...';
+            button.disabled = true;
+            
+            // Open WhatsApp
+            try {
+                window.open(whatsappUrl, '_blank');
+                
+                // Show success message with instructions
+                showSuccess(`WhatsApp opened! The message includes a clickable download link for the PDF receipt.`);
+                
+                // Reset button after delay
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }, 3000);
+                
+            } catch (error) {
+                showError('Error opening WhatsApp. Please try copying the link manually.');
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        }
+        
+        function generateReceipt() {
+            // Show loading state
+            const button = document.getElementById('generateReceiptBtn');
+            const originalText = button.textContent;
+            button.textContent = 'Generating...';
+            button.disabled = true;
+            
+            // Prepare form data for receipt generation
+            const formData = new FormData();
+            
+            // Get current values from all input fields
+            const fieldInputs = document.querySelectorAll('.field-input');
+            fieldInputs.forEach(input => {
+                formData.append(input.name, input.value || '');
+            });
+            
+            // Add filename for receipt naming
+            formData.append('filename', window.currentFilename || 'mobile_upload');
+            
+            // Make API call to generate receipt
+            fetch('/generate_receipt', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    throw new Error('Failed to generate receipt');
+                }
+            })
+            .then(html => {
+                // Parse the response to extract download links
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Show download section
+                showDownloadLinks();
+                
+                // Reset button
+                button.textContent = originalText;
+                button.disabled = false;
+                
+                showSuccess('Receipt generated successfully! Download links are available below.');
+            })
+            .catch(error => {
+                showError('Error generating receipt: ' + error.message);
+                
+                // Reset button
+                button.textContent = originalText;
+                button.disabled = false;
+            });
+        }
+        
+        function showDownloadLinks() {
+            const downloadContainer = document.getElementById('receiptDownloadContainer');
+            const downloadLinks = document.getElementById('downloadLinks');
+            
+            // Create download links based on filename
+            const baseFilename = `web_generated_receipt_${window.currentFilename || 'mobile_upload'}`;
+            
+            // Get mobile number from the form
+            const mobileNumber = document.getElementById('MobileNumber')?.value || '';
+            
+            downloadLinks.innerHTML = `
+                <div style="margin: 10px 0;">
+                    <a href="/download/${baseFilename}.jpg" class="btn btn-outline" target="_blank">
+                        📷 Download JPG
+                    </a>
+                </div>
+                <div style="margin: 10px 0;">
+                    <a href="/download/${baseFilename}.pdf" class="btn btn-outline" target="_blank">
+                        📄 Download PDF
+                    </a>
+                </div>
+                ${mobileNumber ? `
+                <div style="margin: 15px 0; padding: 15px; background: #e8f5e8; border-radius: 10px;">
+                    <div style="margin-bottom: 10px; font-weight: 600; color: #2e7d32;">
+                        📱 Share via WhatsApp
+                    </div>
+                    <button class="btn btn-outline btn-whatsapp" onclick="shareViaWhatsApp('${mobileNumber}', '${baseFilename}.pdf')">
+                        💬 Share PDF on WhatsApp
+                    </button>
+                    <button class="btn btn-outline" onclick="copyPdfLink('${baseFilename}.pdf')" style="margin-left: 10px; background: #2196F3; color: white; border-color: #2196F3;">
+                        📋 Copy PDF Link
+                    </button>
+                    <div style="margin-top: 8px; font-size: 12px; color: #666;">
+                        Will share to: ${mobileNumber}
+                    </div>
+                </div>
+                ` : `
+                <div style="margin: 15px 0; padding: 15px; background: #fff3cd; border-radius: 10px; border: 1px solid #ffeaa7;">
+                    <div style="color: #856404; text-align: center;">
+                        💡 Add a mobile number above to enable WhatsApp sharing
+                    </div>
+                </div>
+                `}
+            `;
+            
+            downloadContainer.style.display = 'block';
+        }
+        
+        function copyPdfLink(filename) {
+            const pdfUrl = `${window.location.origin}/download/${filename}`;
+            
+            // Try to copy to clipboard
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(pdfUrl).then(() => {
+                    showSuccess('PDF link copied to clipboard! You can now paste it in any chat or message.');
+                }).catch(() => {
+                    fallbackCopyTextToClipboard(pdfUrl);
+                });
+            } else {
+                fallbackCopyTextToClipboard(pdfUrl);
+            }
+        }
+        
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showSuccess('PDF link copied to clipboard! You can now paste it in any chat or message.');
+            } catch (err) {
+                showError('Unable to copy link. Please manually copy this URL: ' + text);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
+        function formatFieldName(fieldName) {
+            return fieldName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            // Hide success message
+            document.getElementById('successMessage').style.display = 'none';
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            
+            // Hide error message
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+        
+        // Handle file size validation
+        function validateFile(file) {
+            const maxSize = 16 * 1024 * 1024; // 16MB
+            
+            if (file.size > maxSize) {
+                showError('File size must be less than 16MB');
+                return false;
+            }
+            
+            const allowedTypes = [
+                'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 
+                'image/bmp', 'image/tiff', 'application/pdf'
+            ];
+            
+            if (!allowedTypes.includes(file.type)) {
+                showError('Please select a valid image or PDF file');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Update file handlers to include validation
+        document.getElementById('cameraInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && validateFile(file)) {
+                handleFileSelection(file, 'Camera');
+            }
+        });
+        
+        document.getElementById('galleryInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && validateFile(file)) {
+                handleFileSelection(file, 'Gallery');
+            }
+        });
+        
+        // Enhanced mobile compatibility features
+        
+        // Prevent zoom on iOS when focusing inputs
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+            document.addEventListener('touchstart', function() {}, {passive: true});
+            
+            // Fix viewport scale on orientation change
+            window.addEventListener('orientationchange', function() {
+                setTimeout(function() {
+                    window.scrollTo(0, 0);
+                }, 100);
+            });
+        }
+        
+        // Android-specific enhancements
+        if (/Android/.test(navigator.userAgent)) {
+            // Better file input handling for Android
+            document.getElementById('cameraInput').setAttribute('accept', 'image/*');
+            document.getElementById('galleryInput').setAttribute('accept', 'image/*,application/pdf');
+        }
+        
+        // PWA-like features for mobile
+        if ('serviceWorker' in navigator) {
+            // Register service worker for offline capability
+            navigator.serviceWorker.register('/static/sw.js')
+                .then(function(registration) {
+                    console.log('Service Worker registered successfully:', registration.scope);
+                })
+                .catch(function(error) {
+                    console.log('Service Worker registration failed:', error);
+                });
+        }
+        
+        // Add haptic feedback for iOS devices
+        function hapticFeedback(type = 'light') {
+            if (window.navigator && window.navigator.vibrate) {
+                // Android vibration
+                window.navigator.vibrate(type === 'light' ? 50 : type === 'medium' ? 100 : 200);
+            }
+            
+            // iOS haptic feedback (requires user gesture)
+            if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === 'function') {
+                // iOS haptic feedback would go here
+            }
+        }
+        
+        // Add touch feedback to buttons
+        document.querySelectorAll('.camera-btn, .gallery-btn, .manual-btn, .upload-btn, .btn-primary').forEach(button => {
+            button.addEventListener('touchstart', function() {
+                hapticFeedback('light');
+                this.style.transform = 'scale(0.98)';
+            }, {passive: true});
+            
+            button.addEventListener('touchend', function() {
+                this.style.transform = 'scale(1)';
+            }, {passive: true});
+        });
+        
+        // Enhanced error handling for mobile browsers
+        window.addEventListener('error', function(e) {
+            console.error('Mobile app error:', e.error);
+            showError('An error occurred. Please try again.');
+        });
+        
+        // Network status detection
+        function updateNetworkStatus() {
+            if (!navigator.onLine) {
+                showError('No internet connection. Please check your network and try again.');
+            }
+        }
+        
+        window.addEventListener('online', function() {
+            hideMessages();
+        });
+        
+        window.addEventListener('offline', updateNetworkStatus);
+        
+        // Initial network check
+        if (!navigator.onLine) {
+            updateNetworkStatus();
+        }
+    </script>
+</body>
+</html>

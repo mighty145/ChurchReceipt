@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#667eea">
+    <title>Analysis Results - Church Invoice Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .form-section {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group input[readonly] {
+            background-color: #f5f5f5;
+            color: #666;
+        }
+        
+        .extracted-value {
+            background: #e8f5e8;
+            border-color: #4caf50;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.3);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+            box-shadow: 0 10px 20px rgba(108,117,125,0.3);
+        }
+        
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .extracted-indicator {
+            background: #4caf50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        
+        .no-value {
+            color: #999;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">✅</div>
+            <h1>Analysis Complete</h1>
+            <p class="subtitle">Review and edit the extracted data below, then generate your receipt</p>
+        </div>
+        
+        <form action="{{ url_for('generate_receipt') }}" method="post">
+            <input type="hidden" name="filename" value="{{ filename }}">
+            
+            <div class="form-section">
+                <h2 class="section-title">Basic Information</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="InvoiceDate">
+                            Invoice Date
+                            {% if extracted_data.InvoiceDate %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="date" id="InvoiceDate" name="InvoiceDate" 
+                               value="{{ extracted_data.InvoiceDate or '2025-07-26' }}"
+                               class="{% if extracted_data.InvoiceDate %}extracted-value{% endif %}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Name">
+                            Full Name
+                            {% if extracted_data.Name %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="text" id="Name" name="Name" 
+                               value="{{ extracted_data.Name or '' }}"
+                               class="{% if extracted_data.Name %}extracted-value{% endif %}"
+                               placeholder="Enter full name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Address">
+                            Address
+                            {% if extracted_data.Address %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="text" id="Address" name="Address" 
+                               value="{{ extracted_data.Address or '' }}"
+                               class="{% if extracted_data.Address %}extracted-value{% endif %}"
+                               placeholder="Enter address">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="MobileNumber">
+                            Mobile Number (for WhatsApp sharing)
+                            {% if extracted_data.MobileNumber %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="tel" id="MobileNumber" name="MobileNumber" 
+                               value="{{ extracted_data.MobileNumber or '' }}"
+                               class="{% if extracted_data.MobileNumber %}extracted-value{% endif %}"
+                               placeholder="+1234567890"
+                               onchange="updateWhatsAppOption()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="PaymentMethod">Payment Method</label>
+                        <select id="PaymentMethod" name="PaymentMethod">
+                            <option value="CASH">Cash</option>
+                            <option value="CHEQUE">Cheque</option>
+                            <option value="ONLINE">Online</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="OnlineChequeNo">
+                            Reference Number
+                            {% if extracted_data.OnlineChequeNo %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="text" id="OnlineChequeNo" name="OnlineChequeNo" 
+                               value="{{ extracted_data.OnlineChequeNo or '' }}"
+                               class="{% if extracted_data.OnlineChequeNo %}extracted-value{% endif %}"
+                               placeholder="Cheque number or transaction reference">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h2 class="section-title">Tithe & Membership</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="TitheMonth">
+                            Tithe Month
+                            {% if extracted_data.TitheMonth %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="text" id="TitheMonth" name="TitheMonth" 
+                               value="{{ extracted_data.TitheMonth or '' }}"
+                               class="{% if extracted_data.TitheMonth %}extracted-value{% endif %}"
+                               placeholder="e.g., January 2025">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="TitheAmount">
+                            Tithe Amount
+                            {% if extracted_data.TitheAmount %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="number" step="0.01" id="TitheAmount" name="TitheAmount" 
+                               value="{{ extracted_data.TitheAmount or '' }}"
+                               class="{% if extracted_data.TitheAmount %}extracted-value{% endif %}"
+                               placeholder="0.00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="MembershipMonth">
+                            Membership Month
+                            {% if extracted_data.MembershipMonth %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="text" id="MembershipMonth" name="MembershipMonth" 
+                               value="{{ extracted_data.MembershipMonth or '' }}"
+                               class="{% if extracted_data.MembershipMonth %}extracted-value{% endif %}"
+                               placeholder="e.g., January 2025">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="MembershipAmount">
+                            Membership Amount
+                            {% if extracted_data.MembershipAmount %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="number" step="0.01" id="MembershipAmount" name="MembershipAmount" 
+                               value="{{ extracted_data.MembershipAmount or '' }}"
+                               class="{% if extracted_data.MembershipAmount %}extracted-value{% endif %}"
+                               placeholder="0.00">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h2 class="section-title">Offerings & Funds</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="BirthdayThankOffering">
+                            Birthday Thank Offering
+                            {% if extracted_data.BirthdayThankOffering %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="number" step="0.01" id="BirthdayThankOffering" name="BirthdayThankOffering" 
+                               value="{{ extracted_data.BirthdayThankOffering or '' }}"
+                               class="{% if extracted_data.BirthdayThankOffering %}extracted-value{% endif %}"
+                               placeholder="0.00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="WeddingAnniversaryThankOffering">
+                            Wedding Anniversary Thank Offering
+                            {% if extracted_data.WeddingAnniversaryThankOffering %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="number" step="0.01" id="WeddingAnniversaryThankOffering" name="WeddingAnniversaryThankOffering" 
+                               value="{{ extracted_data.WeddingAnniversaryThankOffering or '' }}"
+                               class="{% if extracted_data.WeddingAnniversaryThankOffering %}extracted-value{% endif %}"
+                               placeholder="0.00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="HomeMissionPledges">
+                            Home Mission Pledges
+                            {% if extracted_data.HomeMissionPledges %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="number" step="0.01" id="HomeMissionPledges" name="HomeMissionPledges" 
+                               value="{{ extracted_data.HomeMissionPledges or '' }}"
+                               class="{% if extracted_data.HomeMissionPledges %}extracted-value{% endif %}"
+                               placeholder="0.00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="MissionAndEvangelismFund">
+                            Mission & Evangelism Fund
+                            {% if extracted_data.MissionAndEvangelismFund %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="number" step="0.01" id="MissionAndEvangelismFund" name="MissionAndEvangelismFund" 
+                               value="{{ extracted_data.MissionAndEvangelismFund or '' }}"
+                               class="{% if extracted_data.MissionAndEvangelismFund %}extracted-value{% endif %}"
+                               placeholder="0.00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="StStephensSocialAidFund">
+                            St Stephen's Social Aid Fund
+                            {% if extracted_data.StStephensSocialAidFund %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="number" step="0.01" id="StStephensSocialAidFund" name="StStephensSocialAidFund" 
+                               value="{{ extracted_data.StStephensSocialAidFund or '' }}"
+                               class="{% if extracted_data.StStephensSocialAidFund %}extracted-value{% endif %}"
+                               placeholder="0.00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="SpecialThanksAmount">
+                            Special Thanks Amount
+                            {% if extracted_data.SpecialThanksAmount %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="number" step="0.01" id="SpecialThanksAmount" name="SpecialThanksAmount" 
+                               value="{{ extracted_data.SpecialThanksAmount or '' }}"
+                               class="{% if extracted_data.SpecialThanksAmount %}extracted-value{% endif %}"
+                               placeholder="0.00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="CharityFundAmount">
+                            Charity Fund Amount
+                            {% if extracted_data.CharityFundAmount %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="number" step="0.01" id="CharityFundAmount" name="CharityFundAmount" 
+                               value="{{ extracted_data.CharityFundAmount or '' }}"
+                               class="{% if extracted_data.CharityFundAmount %}extracted-value{% endif %}"
+                               placeholder="0.00">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h2 class="section-title">Donations & Special Items</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="DonationFor">
+                            Donation For
+                            {% if extracted_data.DonationFor %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="text" id="DonationFor" name="DonationFor" 
+                               value="{{ extracted_data.DonationFor or '' }}"
+                               class="{% if extracted_data.DonationFor %}extracted-value{% endif %}"
+                               placeholder="Purpose of donation">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="DonationAmount">
+                            Donation Amount
+                            {% if extracted_data.DonationAmount %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="number" step="0.01" id="DonationAmount" name="DonationAmount" 
+                               value="{{ extracted_data.DonationAmount or '' }}"
+                               class="{% if extracted_data.DonationAmount %}extracted-value{% endif %}"
+                               placeholder="0.00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="HarvestAuctionComment">
+                            Harvest Auction Comment
+                            {% if extracted_data.HarvestAuctionComment %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="text" id="HarvestAuctionComment" name="HarvestAuctionComment" 
+                               value="{{ extracted_data.HarvestAuctionComment or '' }}"
+                               class="{% if extracted_data.HarvestAuctionComment %}extracted-value{% endif %}"
+                               placeholder="Comment or item">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="HarvestAuctionAmount">
+                            Harvest Auction Amount
+                            {% if extracted_data.HarvestAuctionAmount %}
+                                <span class="extracted-indicator">Extracted</span>
+                            {% endif %}
+                        </label>
+                        <input type="number" step="0.01" id="HarvestAuctionAmount" name="HarvestAuctionAmount" 
+                               value="{{ extracted_data.HarvestAuctionAmount or '' }}"
+                               class="{% if extracted_data.HarvestAuctionAmount %}extracted-value{% endif %}"
+                               placeholder="0.00">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button type="submit" class="btn">Generate Receipt</button>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">Upload Another File</a>
+            </div>
+            
+            <!-- WhatsApp sharing section (initially hidden) -->
+            <div id="whatsappSection" style="display: none; margin-top: 20px; padding: 20px; background: #e8f5e8; border-radius: 10px;">
+                <h3 style="color: #2e7d32; margin-bottom: 15px;">📱 Share via WhatsApp</h3>
+                <p style="color: #555; margin-bottom: 15px;">Generate the receipt first, then share it via WhatsApp.</p>
+                <button type="button" id="whatsappBtn" class="btn" style="background: #25D366; color: white;" onclick="shareViaWhatsApp()" disabled>
+                    💬 Share PDF on WhatsApp
+                </button>
+                <div id="whatsappMessage" style="margin-top: 10px; font-size: 14px; color: #666;"></div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let generatedFilename = null;
+        
+        function updateWhatsAppOption() {
+            const mobileNumber = document.getElementById('MobileNumber').value;
+            const whatsappSection = document.getElementById('whatsappSection');
+            const whatsappMessage = document.getElementById('whatsappMessage');
+            
+            if (mobileNumber.trim()) {
+                whatsappSection.style.display = 'block';
+                whatsappMessage.textContent = `Will share to: ${mobileNumber}`;
+            } else {
+                whatsappSection.style.display = 'none';
+            }
+        }
+        
+        function shareViaWhatsApp() {
+            if (!generatedFilename) {
+                alert('Please generate the receipt first before sharing.');
+                return;
+            }
+            
+            const mobileNumber = document.getElementById('MobileNumber').value;
+            if (!mobileNumber.trim()) {
+                alert('Please enter a mobile number first.');
+                return;
+            }
+            
+            // Format mobile number
+            const cleanNumber = mobileNumber.replace(/\D/g, '');
+            let formattedNumber = cleanNumber;
+            
+            if (!formattedNumber.startsWith('1') && formattedNumber.length === 10) {
+                formattedNumber = '1' + formattedNumber;
+            }
+            
+            // Create download URL for the PDF
+            const pdfUrl = `${window.location.origin}/download/${generatedFilename}.pdf`;
+            
+            // Create message text
+            const name = document.getElementById('Name').value || 'Member';
+            const date = document.getElementById('InvoiceDate').value || new Date().toISOString().split('T')[0];
+            
+            const receiptMessage = encodeURIComponent(
+                `📄 *Church Payment Receipt*\n\n` +
+                `Dear *${name}*,\n\n` +
+                `Thank you for your generous contribution to our church. ` +
+                `Your official payment receipt is ready for download.\n\n` +
+                `🏛️ *The Methodist English Church*\n` +
+                `📅 *Date:* ${date}\n\n` +
+                `📎 *Click here to download your receipt:*\n${pdfUrl}\n\n` +
+                `💡 *Instructions:*\n` +
+                `• Tap the link above to download\n` +
+                `• Save the PDF to your device\n` +
+                `• Keep it for your records\n\n` +
+                `God bless you! 🙏\n\n` +
+                `_This is an automated message from The Methodist English Church receipt system._`
+            );
+            
+            // Open WhatsApp
+            const whatsappUrl = `https://wa.me/${formattedNumber}?text=${receiptMessage}`;
+            window.open(whatsappUrl, '_blank');
+            
+            // Show success message
+            alert('WhatsApp opened! The message includes a download link for the PDF receipt.');
+        }
+        
+        // Monitor form submission to enable WhatsApp sharing
+        document.querySelector('form').addEventListener('submit', function(e) {
+            // Extract filename from form for later use
+            const filenamInput = document.querySelector('input[name="filename"]');
+            if (filenamInput) {
+                generatedFilename = `web_generated_receipt_${filenamInput.value}`;
+                
+                // Enable WhatsApp button after a delay (assuming receipt generation takes some time)
+                setTimeout(() => {
+                    const whatsappBtn = document.getElementById('whatsappBtn');
+                    if (whatsappBtn) {
+                        whatsappBtn.disabled = false;
+                        whatsappBtn.textContent = '💬 Share PDF on WhatsApp';
+                    }
+                }, 2000);
+            }
+        });
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateWhatsAppOption();
+        });
+    </script>
+</body>
+</html>
