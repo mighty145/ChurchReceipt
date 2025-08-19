@@ -1,0 +1,17 @@
+{
+  "org_name": "The Methodist English Church",
+  "org_address": "39, Elphinstone Road, Kirkee, Pune - 411003",
+  "date": "2025-08-07",
+  "donor_name": "Diana Moses More",
+  "address": "B305 Cassiopeia Classic, Baner, Pune",
+  "line_items": [
+    {
+      "category": "Tithe",
+      "month": "July",
+      "purpose": "",
+      "amount": 1000
+    }
+  ],
+  "total_amount": 1000,
+  "currency": "INR"
+}

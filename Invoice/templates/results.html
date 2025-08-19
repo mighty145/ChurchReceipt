@@ -202,7 +202,7 @@
                             {% endif %}
                         </label>
                         <input type="date" id="InvoiceDate" name="InvoiceDate" 
-                               value="{{ extracted_data.InvoiceDate or '2025-07-26' }}"
+                               value="{{ extracted_data.InvoiceDate or '2025=08-01' }}"
                                class="{% if extracted_data.InvoiceDate %}extracted-value{% endif %}">
                     </div>
                     
@@ -483,6 +483,7 @@
             <div class="actions">
                 <button type="submit" class="btn">Generate Receipt</button>
                 <a href="{{ url_for('index') }}" class="btn btn-secondary">Upload Another File</a>
+                <a href="{{ url_for('reports_dashboard') }}" class="btn" style="background: #17a2b8;">📊 Weekly Report Generator</a>
             </div>
             
             <!-- WhatsApp sharing section (initially hidden) -->

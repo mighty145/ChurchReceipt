@@ -1,0 +1,18 @@
+{  
+  "Date": "16-AUG-2025",  
+  "TITHE(MONTH)": "AUG-25",  
+  "TITHE": 1000,  
+  "MEMBERSHIP(MONTH)": "AUG-25",  
+  "MEMBERSHIP": 250,  
+  "BIRTHDAY THANK OFFERING": 500,  
+  "WEDDING ANNIVERSARY THANK OFFERING": 850,  
+  "HOME MISSION PLEDGES": 9500,  
+  "MISSION & EVANGELISM FUND": 1850,  
+  "ST. STEPHEN'S SOCIAL AID FUND": 900,  
+  "DONATION TEXT": "CHURCH RELIEF",  
+  "DONATION": 1500,  
+  "Name": "Rahul Bhatia",  
+  "Address": "PUNE, AMANORA, PIN-411028"  
+}  
+
+You extract structured data from forms in JSON schema format which includes -Date as DD-MMM-YYYY format, TITHE(MONTH) as string, TITHE as number, MEMBERSHIP(MONTH) as string, MEMBERSHIP as number, BIRTHDAY THANK OFFERING as number, WEDDING ANNIVERSARY THANK OFFERING as number, HOME MISSION PLEDGES as number, MISSION & EVANGELISM FUND as number, ST. STEPHEN'S SOCIAL AID FUND as number, DONATION TEXT as string, DONATION as number, Name as string and Address as string.

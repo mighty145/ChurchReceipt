@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Report Generator - Church Invoice Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .reports-section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section-title {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        }
+        
+        .available-dates {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .date-tag {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 0.9em;
+        }
+        
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        
+        .flash {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .flash.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">📊</div>
+            <h1>Weekly Report Generator</h1>
+            <p class="subtitle">Generate and view weekly church offertory reports</p>
+        </div>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash success">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Weekly Offertory Report Section -->
+        <div class="reports-section">
+            <h2 class="section-title">📋 Weekly Offertory Collection Report</h2>
+            <p style="margin-bottom: 20px; color: #666;">
+                Generate professional PDF reports for weekly offertory collections based on receipt data.
+            </p>
+            
+            <form action="{{ url_for('generate_offertory_report') }}" method="POST">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="service_date">Service Date</label>
+                        <input type="date" id="service_date" name="service_date" required 
+                               value="{{ today or '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="service_type">Service Type</label>
+                        <select id="service_type" name="service_type">
+                            <option value="Worship Service">Worship Service</option>
+                            <option value="Evening Service">Evening Service</option>
+                            <option value="Prayer Meeting">Prayer Meeting</option>
+                            <option value="Special Service">Special Service</option>
+                            <option value="Christmas Service">Christmas Service</option>
+                            <option value="Easter Service">Easter Service</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="font-size: 0.9em; color: #666; margin-bottom: 15px; padding: 10px; background: #f0f8ff; border-radius: 5px;">
+                    Reports will be generated in PDF format for professional presentation
+                    {% if not pdf_available %}
+                        <br><strong>Note:</strong> PDF generation requires reportlab package. Install with: pip install reportlab
+                    {% endif %}
+                </div>
+                
+                <div class="actions">
+                    <button type="submit" class="btn">Generate Weekly Offertory Report</button>
+                </div>
+            </form>
+            
+            {% if available_dates %}
+                <div class="available-dates">
+                    <strong>Available Receipt Dates:</strong><br>
+                    {% for date in available_dates %}
+                        <span class="date-tag">{{ date }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Summary Report Section -->
+        <div class="reports-section">
+            <h2 class="section-title">📈 Summary Report</h2>
+            <p style="margin-bottom: 20px; color: #666;">
+                View summary statistics for a date range.
+            </p>
+            
+            <form action="{{ url_for('summary_report') }}" method="GET">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="start_date">Start Date</label>
+                        <input type="date" id="start_date" name="start_date" 
+                               value="{{ first_of_month or '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="end_date">End Date</label>
+                        <input type="date" id="end_date" name="end_date" 
+                               value="{{ today or '' }}">
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button type="submit" class="btn btn-info">View Summary Report</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="actions">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Upload</a>
+            <a href="{{ url_for('manual_entry') }}" class="btn btn-secondary">Manual Entry</a>
+        </div>
+    </div>
+    
+    <script>
+        // Set default dates
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            
+            // Set today's date as default for service date
+            const serviceDateInput = document.getElementById('service_date');
+            if (!serviceDateInput.value) {
+                serviceDateInput.value = today.toISOString().split('T')[0];
+            }
+            
+            // Set first of month as default for start date
+            const startDateInput = document.getElementById('start_date');
+            if (!startDateInput.value) {
+                startDateInput.value = firstOfMonth.toISOString().split('T')[0];
+            }
+            
+            // Set today as default for end date
+            const endDateInput = document.getElementById('end_date');
+            if (!endDateInput.value) {
+                endDateInput.value = today.toISOString().split('T')[0];
+            }
+        });
+        
+        // Auto-select available dates when clicked
+        document.querySelectorAll('.date-tag').forEach(function(tag) {
+            tag.style.cursor = 'pointer';
+            tag.addEventListener('click', function() {
+                const date = this.textContent;
+                document.getElementById('service_date').value = date;
+            });
+        });
+    </script>
+</body>
+</html>

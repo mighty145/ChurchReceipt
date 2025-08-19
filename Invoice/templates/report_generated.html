@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Generated - Church Invoice Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .success-icon {
+            color: #4caf50;
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .report-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 30px 0;
+            text-align: left;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .info-value {
+            color: #666;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+        
+        .download-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #e8f5e8;
+            border-radius: 10px;
+            border: 1px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">✅</div>
+        <h1>Report Generated Successfully!</h1>
+        <p>Your offertory collection report has been generated and is ready for download.</p>
+        
+        <div class="report-info">
+            <div class="info-item">
+                <span class="info-label">Report Type:</span>
+                <span class="info-value">{{ report_type or 'CSV' }} Offertory Collection Report</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Service Date:</span>
+                <span class="info-value">{{ service_date }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Service Type:</span>
+                <span class="info-value">{{ service_type }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Filename:</span>
+                <span class="info-value">{{ report_filename }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Format:</span>
+                <span class="info-value">
+                    {% if report_type == 'Excel' %}
+                        Excel Spreadsheet (.xlsx)
+                    {% else %}
+                        CSV Spreadsheet (.csv)
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        
+        <div class="download-section">
+            <h3 style="margin-bottom: 15px; color: #28a745;">📥 Download Options</h3>
+            <p style="margin-bottom: 20px; color: #666;">
+                The report includes both bag offertory collection data and individual special offertory contributions.
+                {% if report_type == 'CSV' %}
+                    This CSV file can be opened with Excel or any spreadsheet application.
+                {% endif %}
+            </p>
+            
+            <a href="{{ url_for('download_report', filename=report_filename) }}" 
+               class="btn btn-success">
+               📄 Download {{ report_type or 'CSV' }} Report
+            </a>
+        </div>
+        
+        <div class="actions">
+            <a href="{{ url_for('reports_dashboard') }}" class="btn">Generate Another Report</a>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Upload</a>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-focus for mobile accessibility
+        window.addEventListener('load', function() {
+            if (window.innerWidth <= 768) {
+                document.querySelector('.container').scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+{
+"name": "invoice_support_response",
+"schema": {
+"type": "object",
+"properties": {
+"org_name": {
+"type": "string",
+"description": "Name of the organization issuing the invoice"
+},
+"org_address": {
+"type": "string",
+"description": "Address of the organization"
+},
+"date": {
+"type": "string",
+"format": "date",
+"description": "Date of the invoice in DD-MM-YYYY format"
+},
+"donor_name": {
+"type": "string",
+"description": "Name of the donor"
+},
+"address": {
+"type": "string",
+"description": "Address of the donor"
+},
+"line_items": {
+"type": "array",
+"description": "List of contribution items",
+"items": {
+"type": "object",
+"properties": {
+"category": {
+"type": "string",
+"description": "Category of the contribution"
+},
+"month": {
+"type": "string",
+"description": "Month related to the contribution, if applicable"
+},
+"purpose": {
+"type": "string",
+"description": "Purpose of the donation, if applicable"
+},
+"amount": {
+"type": "number",
+"description": "Amount contributed for this category"
+}
+},
+"required": ["category", "amount"]
+}
+},
+"total_amount": {
+"type": "number",
+"description": "Total amount of all contributions"
+},
+"currency": {
+"type": "string",
+"description": "Currency code in ISO 4217 format, e.g., INR"
+}
+},
+"required": [
+"org_name",
+"org_address",
+"date",
+"donor_name",
+"line_items",
+"total_amount",
+"currency"
+]
+}
+}

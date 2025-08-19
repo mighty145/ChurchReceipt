@@ -1,11 +1,21 @@
 import os
+import sys
 import json
 import logging
+
+# Add local site-packages to path for Flask and dependencies
+current_dir = os.path.dirname(os.path.abspath(__file__))
+local_packages = os.path.join(current_dir, 'Lib', 'site-packages')
+if os.path.exists(local_packages) and local_packages not in sys.path:
+    sys.path.insert(0, local_packages)
+
 from flask import Flask, request, render_template, redirect, url_for, flash, jsonify, send_file
 from werkzeug.utils import secure_filename
 from pathlib import Path
 import tempfile
 from invoiceanalyzer import AzureContentUnderstandingClient, Settings
+from offertory_report import OffertoryReportGenerator, OPENPYXL_AVAILABLE, PDF_AVAILABLE
+from csv_report import CSVReportGenerator
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'  # Change this to a secure secret key
@@ -82,8 +92,10 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
+'''Comment out the call of Azure form recognizer
 def analyze_uploaded_file(file_path):
-    """Analyze the uploaded file using Azure Content Understanding"""
+    # Analyze the uploaded file using Azure Content Understanding
     try:
         # Load configuration from environment
         from config import Config
@@ -149,6 +161,34 @@ def analyze_uploaded_file(file_path):
             
     except Exception as e:
         logging.error(f"Error analyzing file: {e}")
+        return {}, {"error": str(e)}
+'''
+
+def analyze_uploaded_file(file_path):
+    """
+    Analyze the uploaded file using GPT-4o via main.py.
+    """
+    import subprocess
+    import sys
+
+    main_py_path = os.path.join(os.path.dirname(__file__), "OpenAImodel", "main.py")
+    python_exe = sys.executable
+
+    try:
+        result = subprocess.run(
+            [python_exe, main_py_path, file_path],
+            capture_output=True,
+            text=True,
+            timeout=120
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"main.py error: {result.stderr}")
+
+        # Output is JSON string of mapped fields
+        extracted_data = json.loads(result.stdout)
+        return extracted_data, {"gpt4o_result": extracted_data}
+    except Exception as e:
+        logging.error(f"Error analyzing file with GPT-4o: {e}")
         return {}, {"error": str(e)}
 
 @app.route('/')
@@ -318,6 +358,16 @@ def generate_receipt():
             'PaymentMethod': request.form.get('PaymentMethod', 'CASH')
         }
         
+        # Import CSV export function from invoiceanalyzer
+        from invoiceanalyzer import export_to_csv
+        
+        # Export data to CSV before generating receipt
+        try:
+            export_to_csv(receipt_data)
+            logging.info("Data exported to Extract.csv successfully")
+        except Exception as csv_error:
+            logging.error(f"Error exporting to CSV: {csv_error}")
+        
         # Import and use printreceipt module
         from printreceipt import generate_receipt, save_receipt_multiple_formats
         
@@ -442,6 +492,104 @@ def download_file(filename):
     except Exception as e:
         flash(f'Error downloading file: {str(e)}')
         return redirect(url_for('index'))
+
+@app.route('/reports')
+def reports_dashboard():
+    """Dashboard for generating and viewing weekly reports"""
+    try:
+        generator = OffertoryReportGenerator()
+        available_dates = generator.get_available_receipt_dates()
+        
+        return render_template('reports_dashboard.html', 
+                             available_dates=available_dates,
+                             excel_available=OPENPYXL_AVAILABLE,
+                             pdf_available=PDF_AVAILABLE)
+    except Exception as e:
+        flash(f'Error loading weekly report generator: {str(e)}')
+        return redirect(url_for('index'))
+
+@app.route('/generate_offertory_report', methods=['POST'])
+def generate_offertory_report():
+    """Generate offertory report for a specific date"""
+    try:
+        service_date = request.form.get('service_date')
+        service_type = request.form.get('service_type', 'Worship Service')
+        
+        if not service_date:
+            flash('Please select a service date')
+            return redirect(url_for('reports_dashboard'))
+        
+        # Generate PDF report (primary format)
+        generator = OffertoryReportGenerator()
+        if PDF_AVAILABLE:
+            report_path = generator.generate_offertory_report_pdf(service_date, service_type)
+            report_type = 'PDF'
+        else:
+            # Fallback to Excel if PDF is not available
+            if OPENPYXL_AVAILABLE:
+                report_path = generator.generate_offertory_report(service_date, service_type)
+                report_type = 'Excel'
+            else:
+                # Final fallback to CSV
+                csv_generator = CSVReportGenerator()
+                report_path = csv_generator.generate_csv_offertory_report(service_date, service_type)
+                report_type = 'CSV'
+        
+        if os.path.exists(report_path):
+            filename = os.path.basename(report_path)
+            flash(f'{report_type} offertory report generated successfully: {filename}')
+            return render_template('report_generated.html', 
+                                 report_filename=filename,
+                                 service_date=service_date,
+                                 service_type=service_type,
+                                 report_type=report_type)
+        else:
+            flash('Error generating report')
+            return redirect(url_for('reports_dashboard'))
+            
+    except Exception as e:
+        flash(f'Error generating offertory report: {str(e)}')
+        return redirect(url_for('reports_dashboard'))
+
+@app.route('/summary_report')
+def summary_report():
+    """Generate summary report for date range"""
+    try:
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        generator = OffertoryReportGenerator()
+        summary_data = generator.generate_summary_report(start_date, end_date)
+        
+        return render_template('summary_report.html', 
+                             summary=summary_data)
+    except Exception as e:
+        flash(f'Error generating summary report: {str(e)}')
+        return redirect(url_for('reports_dashboard'))
+
+@app.route('/download_report/<filename>')
+def download_report(filename):
+    """Download generated reports"""
+    try:
+        safe_filename = secure_filename(filename)
+        
+        # Check multiple locations for the report file
+        possible_paths = [
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "Receipts store", "Reports", safe_filename),
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "Receipts store", "CSV_Reports", safe_filename)
+        ]
+        
+        for report_path in possible_paths:
+            if os.path.exists(report_path):
+                return send_file(report_path, as_attachment=True, download_name=safe_filename)
+        
+        # File not found in any location
+        flash('Report file not found')
+        return redirect(url_for('reports_dashboard'))
+            
+    except Exception as e:
+        flash(f'Error downloading report: {str(e)}')
+        return redirect(url_for('reports_dashboard'))
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
